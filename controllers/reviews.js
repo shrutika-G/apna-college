@@ -3,7 +3,8 @@ const Review=require("../models/review");
 
 
 module.exports.createReview = async (req, res) => {
-   console.log(req.params.id);
+   const {id}=req.params;
+    console.log("Listing ID",id);
 
     let listing = await Listing.findById(id).populate("reviews");
     let newReview = new Review(req.body.review);
