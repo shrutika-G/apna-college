@@ -20,7 +20,7 @@ const listingRouter=require("./routes/listing.js");
 const reviewRouter=require("./routes/review.js");
 const userRouter=require("./routes/user.js");
 
-
+//const dbUrl="mongodb://127.0.0.1:27017/wanderlust";
 const dbUrl=process.env.ATLASDB_URL;
 
 main().then(()=>{
@@ -52,16 +52,16 @@ store.on("error",()=>{
     console.log("Error in Mongo Session store");
 });
 
-const sessionOptions = {
-  store,
-  secret: process.env.SECRET || "fallbacksecret",
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-  },
+const sessionOptions={
+    store,
+    secret:process.env.SECRET,
+    resave:false,
+    saveUninitialized:true,
+    cookie:{
+        expires:Date.now()+7*24*60*60*1000,
+        maxAge:7*24*60*60*1000,
+        httpOnly:true,
+      },
 };
 
 // app.get("/",(req,res)=>{
@@ -70,9 +70,9 @@ const sessionOptions = {
 
 
 
-
-app.use(session(sessionOptions)); // must be before flash
+app.use(session(sessionOptions));
 app.use(flash());
+
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
@@ -81,7 +81,7 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.get("/", (req, res) => {
-  res.render("home"); // your home.ejs layout
+  res.redirect("/listings"); // Users will land on listings page
 });
 
 app.use((req,res,next)=>{
@@ -109,17 +109,9 @@ app.use((req, res, next) => {
   next(err);
 });
 
-app.use((err, req, res, next) => {
-    console.error(err);
-    const { statusCode = 500 } = err;
-    if (!err.message) err.message = "Something Went Wrong!";
-
-    // Ensure flash messages and currUser are available even in error views
-    res.locals.currUser = req.user;
-    res.locals.error = req.flash("error");
-    res.locals.success = req.flash("success");
-
-    res.status(statusCode).render("error.ejs", { err });
+app.use((err,req,res,next)=>{
+   let {statusCode=500,message="Something Went Wrong!"}=err;
+   res.status(statusCode).render("error.ejs",{message});
 });
 
 
